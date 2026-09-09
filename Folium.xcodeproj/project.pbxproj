@@ -1501,7 +1501,7 @@
 /* Begin XCRemoteSwiftPackageReference section */
 		E656E9A03006F6CC0061EA22 /* XCRemoteSwiftPackageReference "zstd" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jarrodnorwell/zstd";
+			repositoryURL = "https://github.com/lapnguyenngo12092010-eng/zstd";
 			requirement = {
 				branch = dev;
 				kind = branch;
@@ -1509,7 +1509,7 @@
 		};
 		E656E9AD3006F7FF0061EA22 /* XCRemoteSwiftPackageReference "TPCircularBuffer" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jarrodnorwell/TPCircularBuffer";
+			repositoryURL = "https://github.com/lapnguyenngo12092010-eng/TPCircularBuffer";
 			requirement = {
 				branch = master;
 				kind = branch;
