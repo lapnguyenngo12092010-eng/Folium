@@ -13,14 +13,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Purge SPM Cache & Point to Fork
+      - name: Redirect All Remote Dependencies & Purge Cache
         run: |
-          # Remove all locked resolution files
+          # Delete all resolution lockfiles
           rm -f Folium.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
           find . -name "Package.resolved" -delete
           
-          # Replace AntiqueKit URL with your patched fork across all project files
-          find . -name "project.pbxproj" -exec sed -i '' 's|https://github.com/jarrodnorwell/AntiqueKit|https://github.com/lapnguyenngo12092010-eng/AntiqueKit|g' {} +
+          # Replace jarrodnorwell's remote package repos with your patched forks across the project
+          find . -name "project.pbxproj" -exec sed -i '' 's|https://github.com/jarrodnorwell/|https://github.com/lapnguyenngo12092010-eng/|g' {} +
+
+          # Patch local Package.swift manifests if any exist in submodules
+          find . -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
 
       - name: Build Folium App
         run: |
