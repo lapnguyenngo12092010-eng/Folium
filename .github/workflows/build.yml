@@ -5,13 +5,19 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-15
-    
+    runs-on: macos-16
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Select Latest Xcode Toolchain
+        run: |
+          XCODE_LATEST=$(ls -d /Applications/Xcode_*.app | sort -V | tail -n 1)
+          echo "Using Xcode at: $XCODE_LATEST"
+          sudo xcode-select -s "$XCODE_LATEST/Contents/Developer"
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -22,21 +28,23 @@ jobs:
             xcodegen generate
           fi
 
-      - name: Patch C++ Flags & Build Folium
+      - name: Resolve Package Dependencies & Build
         run: |
           PROJ_PATH=$(find . -maxdepth 2 -name "*.xcodeproj" | head -n 1)
-          
+
+          xcodebuild -resolvePackageDependencies -project "$PROJ_PATH"
+
           xcodebuild build \
             -project "$PROJ_PATH" \
             -scheme "Folium" \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
-            CLANG_CXX_LANGUAGE_STANDARD="c++17" \
+            CLANG_CXX_LANGUAGE_STANDARD="gnu++17" \
             GCC_PREPROCESSOR_DEFINITIONS='$(inherited) _CRT_SECURE_NO_WARNINGS=1' \
-            CLANG_WARN_STRICT_PROTOTYPES=NO \
-            OTHER_CFLAGS="-Wno-error=everything" \
-            OTHER_CPLUSPLUSFLAGS="-Wno-error=everything -std=c++17" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            OTHER_CFLAGS="-Wno-everything" \
+            OTHER_CPLUSPLUSFLAGS="-Wno-everything -std=gnu++17" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
