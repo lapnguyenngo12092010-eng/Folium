@@ -18,11 +18,28 @@ jobs:
         with:
           xcode-version: '15.4'
 
-      - name: Build Folium with Xcode Workspace
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
         run: |
+          if [ -f "project.yml" ]; then
+            xcodegen generate
+          fi
+
+      - name: Locate Project & Build
+        run: |
+          PROJ_PATH=$(find . -maxdepth 2 -name "*.xcodeproj" | head -n 1)
+          if [ -z "$PROJ_PATH" ]; then
+            echo "Error: No .xcodeproj found after generating."
+            exit 1
+          fi
+          
+          SCHEME_NAME=$(xcodebuild -project "$PROJ_PATH" -list | grep -A 10 "Schemes:" | tail -n +2 | xargs | awk '{print $1}')
+          
           xcodebuild build \
-            -workspace "Folium.xcworkspace" \
-            -scheme "Folium-iOS" \
+            -project "$PROJ_PATH" \
+            -scheme "$SCHEME_NAME" \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
@@ -35,14 +52,14 @@ jobs:
           mkdir -p Payload
           APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" -type d | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "Error: Folium.app target not found."
+            echo "Error: .app binary not found."
             exit 1
           fi
           cp -r "$APP_PATH" Payload/
           zip -r Folium.ipa Payload
 
-      - name: Upload IPA Artifact
+      - name: Upload Finished IPA
         uses: actions/upload-artifact@v4
         with:
-          name: Folium-3DS-IPA
+          name: Folium-iOS-IPA
           path: Folium.ipa
