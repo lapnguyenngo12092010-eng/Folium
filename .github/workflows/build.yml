@@ -13,35 +13,16 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate Xcode Project
+      - name: Force Downgrade Swift Tools Versions
         run: |
-          if [ -f "project.yml" ]; then
-            xcodegen generate
-          fi
+          # Patch all Package.swift manifests to compatibility version 6.0
+          find . -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
+          find . -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version: 6.2/swift-tools-version: 6.0/g' {} +
 
-      - name: Downgrade Swift Tools Requirements
+      - name: Build Folium App
         run: |
-          # Patch local package manifests to accept Swift 6.1 / 6.0
-          find . -name "Package.swift" -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
-          find . -name "Package.swift" -exec sed -i '' 's/swift-tools-version: 6.2/swift-tools-version: 6.0/g' {} +
-
-      - name: Resolve Dependencies & Build
-        run: |
-          PROJ_PATH=$(find . -maxdepth 2 -name "*.xcodeproj" | head -n 1)
-
-          # Fetch dependencies
-          xcodebuild -resolvePackageDependencies -project "$PROJ_PATH" || true
-
-          # Patch any checked out external dependencies (like AntiqueKit) inside DerivedData & SPM Caches
-          find ~/Library/Caches/org.swift.swiftpm/repositories -name "Package.swift" -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} + 2>/dev/null || true
-          find ~/Library/Developer/Xcode/DerivedData -name "Package.swift" -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} + 2>/dev/null || true
-
-          # Final build pass
           xcodebuild build \
-            -project "$PROJ_PATH" \
+            -project "Folium.xcodeproj" \
             -scheme "Folium" \
             -configuration Release \
             -sdk iphoneos \
