@@ -13,11 +13,13 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Force Downgrade Swift Tools Versions
+      - name: Clone and Patch AntiqueKit
         run: |
-          # Patch all Package.swift manifests to compatibility version 6.0
+          mkdir -p LocalDependencies
+          git clone https://github.com/jarrodnorwell/AntiqueKit.git LocalDependencies/AntiqueKit
+          
+          # Force all local and downloaded manifests to 6.0
           find . -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
-          find . -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version: 6.2/swift-tools-version: 6.0/g' {} +
 
       - name: Build Folium App
         run: |
