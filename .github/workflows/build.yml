@@ -22,19 +22,14 @@ jobs:
             xcodegen generate
           fi
 
-      - name: Locate Project & Build
+      - name: Build Folium Main App Scheme
         run: |
           PROJ_PATH=$(find . -maxdepth 2 -name "*.xcodeproj" | head -n 1)
-          if [ -z "$PROJ_PATH" ]; then
-            echo "Error: No .xcodeproj found."
-            exit 1
-          fi
           
-          SCHEME_NAME=$(xcodebuild -project "$PROJ_PATH" -list | grep -A 10 "Schemes:" | tail -n +2 | xargs | awk '{print $1}')
-          
+          # Target 'Folium' scheme directly to avoid building Cherry/Switch sub-cores
           xcodebuild build \
             -project "$PROJ_PATH" \
-            -scheme "$SCHEME_NAME" \
+            -scheme "Folium" \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
