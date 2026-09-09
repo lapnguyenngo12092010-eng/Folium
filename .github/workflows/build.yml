@@ -13,17 +13,27 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Redirect All Remote Dependencies & Purge Cache
+      - name: Redirect Dependencies & Purge Locks
         run: |
-          # Delete all resolution lockfiles
+          # Delete SPM lockfiles
           rm -f Folium.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
           find . -name "Package.resolved" -delete
           
-          # Replace jarrodnorwell's remote package repos with your patched forks across the project
+          # Replace remote package URLs with your patched forks
           find . -name "project.pbxproj" -exec sed -i '' 's|https://github.com/jarrodnorwell/|https://github.com/lapnguyenngo12092010-eng/|g' {} +
 
-          # Patch local Package.swift manifests if any exist in submodules
+          # Pre-patch local manifests
           find . -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
+
+      - name: Pre-resolve Packages & Clean Unhandled Resources
+        run: |
+          # Resolve packages into DerivedData first
+          xcodebuild -resolvePackageDependencies -project "Folium.xcodeproj" || true
+
+          # Remove non-code resource files (PrivacyInfo, Markdown docs) that break C/C++ target compilation
+          find ~/Library/Developer/Xcode/DerivedData -name "PrivacyInfo.xcprivacy" -delete 2>/dev/null || true
+          find build -name "PrivacyInfo.xcprivacy" -delete 2>/dev/null || true
+          find . -name "README.md" -path "*/SourcePackages/*" -delete 2>/dev/null || true
 
       - name: Build Folium App
         run: |
