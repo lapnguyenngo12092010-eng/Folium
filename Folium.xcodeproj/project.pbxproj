@@ -1517,7 +1517,7 @@
 		};
 		E6A0FEEB3007EC92006FB733 /* XCRemoteSwiftPackageReference "AntiqueKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jarrodnorwell/AntiqueKit";
+			repositoryURL = "https://github.com/lapnguyenngo12092010-eng/AntiqueKit";
 			requirement = {
 				branch = main;
 				kind = branch;
