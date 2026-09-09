@@ -13,19 +13,13 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Set up Xcode 16
+      - name: Select Xcode Version with Swift 6.2+ Support
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.0'
+          xcode-version: '16.3'
 
       - name: Install XcodeGen
         run: brew install xcodegen
-
-      - name: Patch Swift Tools Version in Dependencies
-        run: |
-          # Downgrade swift-tools-version declaration across all Package.swift files to match Xcode 16.0
-          find . -name "Package.swift" -exec sed -i '' 's/\/\/ swift-tools-version:.*/\/\/ swift-tools-version:6.0/g' {} +
-          find . -name "Package.swift" -exec sed -i '' 's/swift-tools-version: 6.2/swift-tools-version: 6.0/g' {} +
 
       - name: Generate Xcode Project
         run: |
@@ -33,11 +27,14 @@ jobs:
             xcodegen generate
           fi
 
-      - name: Resolve Dependencies & Build
+      - name: Resolve Swift Package Dependencies
         run: |
           PROJ_PATH=$(find . -maxdepth 2 -name "*.xcodeproj" | head -n 1)
-
           xcodebuild -resolvePackageDependencies -project "$PROJ_PATH"
+
+      - name: Build Folium Scheme
+        run: |
+          PROJ_PATH=$(find . -maxdepth 2 -name "*.xcodeproj" | head -n 1)
 
           xcodebuild build \
             -project "$PROJ_PATH" \
@@ -65,7 +62,7 @@ jobs:
           cp -r "$APP_PATH" Payload/
           zip -r Folium.ipa Payload
 
-      - name: Upload Finished IPA
+      - name: Upload Finished IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Folium-iOS-IPA
