@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-latest
+    runs-on: macos-15
     
     steps:
       - name: Checkout repository
@@ -22,17 +22,21 @@ jobs:
             xcodegen generate
           fi
 
-      - name: Build Folium Main App Scheme
+      - name: Patch C++ Flags & Build Folium
         run: |
           PROJ_PATH=$(find . -maxdepth 2 -name "*.xcodeproj" | head -n 1)
           
-          # Target 'Folium' scheme directly to avoid building Cherry/Switch sub-cores
           xcodebuild build \
             -project "$PROJ_PATH" \
             -scheme "Folium" \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
+            CLANG_CXX_LANGUAGE_STANDARD="c++17" \
+            GCC_PREPROCESSOR_DEFINITIONS='$(inherited) _CRT_SECURE_NO_WARNINGS=1' \
+            CLANG_WARN_STRICT_PROTOTYPES=NO \
+            OTHER_CFLAGS="-Wno-error=everything" \
+            OTHER_CPLUSPLUSFLAGS="-Wno-error=everything -std=c++17" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
