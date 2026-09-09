@@ -13,13 +13,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Clone and Patch AntiqueKit
+      - name: Purge SPM Cache & Point to Fork
         run: |
-          mkdir -p LocalDependencies
-          git clone https://github.com/jarrodnorwell/AntiqueKit.git LocalDependencies/AntiqueKit
+          # Remove all locked resolution files
+          rm -f Folium.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          find . -name "Package.resolved" -delete
           
-          # Force all local and downloaded manifests to 6.0
-          find . -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
+          # Replace AntiqueKit URL with your patched fork across all project files
+          find . -name "project.pbxproj" -exec sed -i '' 's|https://github.com/jarrodnorwell/AntiqueKit|https://github.com/lapnguyenngo12092010-eng/AntiqueKit|g' {} +
 
       - name: Build Folium App
         run: |
