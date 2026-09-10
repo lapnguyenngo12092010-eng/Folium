@@ -24,16 +24,21 @@ jobs:
 
       - name: Resolve SPM & Patch Transitive Dependencies (PLzmaSDK)
         run: |
-          # Step A: Fetch all packages into the build directory
-          xcodebuild -resolvePackageDependencies -project "Folium.xcodeproj" -derivedDataPath build || true
+          # Step A: Fetch all packages into the build directory with scheme specified
+          xcodebuild -resolvePackageDependencies \
+            -project "Folium.xcodeproj" \
+            -scheme "Folium" \
+            -derivedDataPath build || true
 
-          # Step B: Remove problematic resource declarations inside PLzmaSDK's Package.swift in the checkout cache
-          find build/SourcePackages/checkouts -name "Package.swift" -type f -exec sed -i '' '/PrivacyInfo.xcprivacy/d' {} +
-          find build/SourcePackages/checkouts -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
-
-          # Step C: Physically remove the offending PrivacyInfo and Markdown files from checkouts
-          find build/SourcePackages/checkouts -name "PrivacyInfo.xcprivacy" -delete 2>/dev/null || true
-          find build/SourcePackages/checkouts -name "*.md" -delete 2>/dev/null || true
+          # Step B: Ensure directory exists, then strip problematic resource lines from checked-out manifests
+          if [ -d "build/SourcePackages/checkouts" ]; then
+            find build/SourcePackages/checkouts -name "Package.swift" -type f -exec sed -i '' '/PrivacyInfo.xcprivacy/d' {} +
+            find build/SourcePackages/checkouts -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
+            
+            # Step C: Physically delete PrivacyInfo and Markdown files from checkouts
+            find build/SourcePackages/checkouts -name "PrivacyInfo.xcprivacy" -delete 2>/dev/null || true
+            find build/SourcePackages/checkouts -name "*.md" -delete 2>/dev/null || true
+          fi
 
       - name: Build Folium App
         run: |
