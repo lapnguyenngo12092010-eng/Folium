@@ -13,27 +13,27 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Redirect Dependencies & Purge Locks
+      - name: Redirect Repositories & Clear Locks
         run: |
-          # Delete SPM lockfiles
+          # Remove SPM lockfiles to force clean resolution
           rm -f Folium.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
           find . -name "Package.resolved" -delete
           
-          # Replace remote package URLs with your patched forks
+          # Redirect top-level project dependencies to your forks
           find . -name "project.pbxproj" -exec sed -i '' 's|https://github.com/jarrodnorwell/|https://github.com/lapnguyenngo12092010-eng/|g' {} +
 
-          # Pre-patch local manifests
-          find . -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
-
-      - name: Pre-resolve Packages & Clean Unhandled Resources
+      - name: Resolve SPM & Patch Transitive Dependencies (PLzmaSDK)
         run: |
-          # Resolve packages into DerivedData first
-          xcodebuild -resolvePackageDependencies -project "Folium.xcodeproj" || true
+          # Step A: Fetch all packages into the build directory
+          xcodebuild -resolvePackageDependencies -project "Folium.xcodeproj" -derivedDataPath build || true
 
-          # Remove non-code resource files (PrivacyInfo, Markdown docs) that break C/C++ target compilation
-          find ~/Library/Developer/Xcode/DerivedData -name "PrivacyInfo.xcprivacy" -delete 2>/dev/null || true
-          find build -name "PrivacyInfo.xcprivacy" -delete 2>/dev/null || true
-          find . -name "README.md" -path "*/SourcePackages/*" -delete 2>/dev/null || true
+          # Step B: Remove problematic resource declarations inside PLzmaSDK's Package.swift in the checkout cache
+          find build/SourcePackages/checkouts -name "Package.swift" -type f -exec sed -i '' '/PrivacyInfo.xcprivacy/d' {} +
+          find build/SourcePackages/checkouts -name "Package.swift" -type f -exec sed -i '' 's/swift-tools-version:.*/swift-tools-version:6.0/g' {} +
+
+          # Step C: Physically remove the offending PrivacyInfo and Markdown files from checkouts
+          find build/SourcePackages/checkouts -name "PrivacyInfo.xcprivacy" -delete 2>/dev/null || true
+          find build/SourcePackages/checkouts -name "*.md" -delete 2>/dev/null || true
 
       - name: Build Folium App
         run: |
